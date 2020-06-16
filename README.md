@@ -29,9 +29,11 @@ Available Actions:
 
 ## Requirements
 
-You must install the iland-sdk:
+You must install the iland-sdk (https://github.com/ilanddev/python-sdk):
 
+```bash
 pip install iland-sdk
+```
 
 You must supply credentials in creds.json. An example .json file is provided
 in example.creds.json.
