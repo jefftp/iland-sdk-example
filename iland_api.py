@@ -33,25 +33,19 @@ class VirtualMachine:
         self.uuid = vm_data['uuid']
         self.status = vm_data['status']
 
-    def power_on(self):
-        task_data = self.client.api.post('/vms/{}/actions/poweron'.format(self.uuid))
-        return Task(self.client, task_data)
+    def do_action(self, action):
+        actions = {
+            "power_on": "/vms/{}/actions/poweron",
+            "shutdown": "/vms/{}/actions/shutdown",
+            "power_off": "/vms/{}/actions/poweroff",
+            "reboot": "/vms/{}/actions/reboot",
+            "suspend": "/vms/{}/actions/suspend"}
 
-    def shutdown(self):
-        task_data = self.client.api.post('/vms/{}/actions/shutdown'.format(self.uuid))
-        return Task(self.client, task_data)
+        if action in actions:
+            task_data = self.client.api.post(actions[action].format(self.uuid))
+            return Task(self.client, task_data)
 
-    def power_off(self):
-        task_data = self.client.api.post('/vms/{}/actions/poweroff'.format(self.uuid))
-        return Task(self.client, task_data)
-
-    def reboot(self):
-        task_data = self.client.api.post('/vms/{}/actions/reboot'.format(self.uuid))
-        return Task(self.client, task_data)
-
-    def suspend(self):
-        task_data = self.client.api.post('/vms/{}/actions/suspend'.format(self.uuid))
-        return Task(self.client, task_data)
+        sys.exit('Error: Virtual Machines do not support the {} action.').format(action)
 
 class Task:
     def __init__(self, client, task_data):
@@ -111,7 +105,7 @@ def handle_input(client,args):
         if args.object == 'vm':
             if args.uuid:
                 vm = client.get_vm(args.uuid)
-                task = vm.power_on()
+                task = vm.do_action(args.action)
                 task.watch()
             else:
                 sys.exit('Error: UUID required to power on a VM.')
@@ -122,7 +116,7 @@ def handle_input(client,args):
         if args.object == 'vm':
             if args.uuid:
                 vm = client.get_vm(args.uuid)
-                task = vm.shutdown()
+                task = vm.do_action(args.action)
                 task.watch()
             else:
                 sys.exit('Error: UUID required to shutdown a VM.')
@@ -133,7 +127,7 @@ def handle_input(client,args):
         if args.object == 'vm':
             if args.uuid:
                 vm = client.get_vm(args.uuid)
-                task = vm.power_off()
+                task = vm.do_action(args.action)
                 task.watch()
             else:
                 sys.exit('Error: UUID required to power off a VM.')
@@ -144,7 +138,7 @@ def handle_input(client,args):
         if args.object == 'vm':
             if args.uuid:
                 vm = client.get_vm(args.uuid)
-                task = vm.reboot()
+                task = vm.do_action(args.action)
                 task.watch()
             else:
                 sys.exit('Error: UUID required to reboot a VM.')
@@ -155,7 +149,7 @@ def handle_input(client,args):
         if args.object == 'vm':
             if args.uuid:
                 vm = client.get_vm(args.uuid)
-                task = vm.suspend()
+                task = vm.do_action(args.action)
                 task.watch()
             else:
                 sys.exit('Error: UUID required to suspend a VM.')
