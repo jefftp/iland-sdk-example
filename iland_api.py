@@ -49,6 +49,10 @@ class VirtualMachine:
         task_data = self.client.api.post('/vms/{}/actions/reboot'.format(self.uuid))
         return Task(self.client, task_data)
 
+    def suspend(self):
+        task_data = self.client.api.post('/vms/{}/actions/suspend'.format(self.uuid))
+        return Task(self.client, task_data)
+
 class Task:
     def __init__(self, client, task_data):
         self.client = client
@@ -100,6 +104,9 @@ def handle_input(client,args):
             for vm in client.get_entity('IAAS_VM'):
                 print("{}, {}".format(vm["name"], vm["uuid"]))
 
+    # The following blocks of elifs should be refactored into something more
+    # elegant and compact.
+
     elif args.action == 'power_on':
         if args.object == 'vm':
             if args.uuid:
@@ -144,11 +151,22 @@ def handle_input(client,args):
         else:
             sys.exit('Error: Rebooting {} is not supported.'.format(args.object))
 
+    elif args.action == 'suspend':
+        if args.object == 'vm':
+            if args.uuid:
+                vm = client.get_vm(args.uuid)
+                task = vm.suspend()
+                task.watch()
+            else:
+                sys.exit('Error: UUID required to suspend a VM.')
+        else:
+            sys.exit('Error: Suspending {} is not supported.'.format(args.object))
+
 if __name__ == '__main__':
     client = init_api_client()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', help='available actions', choices=['list','power_on','shutdown','power_off','reboot'], default=None)
+    parser.add_argument('action', help='available actions', choices=['list','power_on','shutdown','power_off','reboot', 'suspend'], default=None)
     parser.add_argument('object', help='target object type', choices=['company', 'location','org','vdc','vapp','vm'], default=None)
     parser.add_argument('--uuid', help='target object uuid', default=None, required=False)
     args = parser.parse_args()
