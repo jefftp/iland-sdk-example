@@ -78,6 +78,8 @@ class Task:
             time.sleep(5)
 
 def handle_input(client,args):
+    vm_actions = ['power_on', 'shutdown', 'power_off', 'reboot', 'suspend']
+
     if args.action == 'list':
         if args.object == 'company':
             for company in client.get_entity('COMPANY'):
@@ -98,63 +100,15 @@ def handle_input(client,args):
             for vm in client.get_entity('IAAS_VM'):
                 print("{}, {}".format(vm["name"], vm["uuid"]))
 
-    # The following blocks of elifs should be refactored into something more
-    # elegant and compact.
-
-    elif args.action == 'power_on':
-        if args.object == 'vm':
-            if args.uuid:
-                vm = client.get_vm(args.uuid)
-                task = vm.do_action(args.action)
-                task.watch()
-            else:
-                sys.exit('Error: UUID required to power on a VM.')
+    elif args.action in vm_actions:
+        if args.object == 'vm' and args.uuid:
+            vm = client.get_vm(args.uuid)
+            task = vm.do_action(args.action)
+            task.watch()
         else:
-            sys.exit('Error: Powering on {} is not supported.'.format(args.object))
-
-    elif args.action == 'shutdown':
-        if args.object == 'vm':
-            if args.uuid:
-                vm = client.get_vm(args.uuid)
-                task = vm.do_action(args.action)
-                task.watch()
-            else:
-                sys.exit('Error: UUID required to shutdown a VM.')
-        else:
-            sys.exit('Error: Shutting down {} is not supported.'.format(args.object))
-
-    elif args.action == 'power_off':
-        if args.object == 'vm':
-            if args.uuid:
-                vm = client.get_vm(args.uuid)
-                task = vm.do_action(args.action)
-                task.watch()
-            else:
-                sys.exit('Error: UUID required to power off a VM.')
-        else:
-            sys.exit('Error: Powering off {} is not supported.'.format(args.object))
-
-    elif args.action == 'reboot':
-        if args.object == 'vm':
-            if args.uuid:
-                vm = client.get_vm(args.uuid)
-                task = vm.do_action(args.action)
-                task.watch()
-            else:
-                sys.exit('Error: UUID required to reboot a VM.')
-        else:
-            sys.exit('Error: Rebooting {} is not supported.'.format(args.object))
-
-    elif args.action == 'suspend':
-        if args.object == 'vm':
-            if args.uuid:
-                vm = client.get_vm(args.uuid)
-                task = vm.do_action(args.action)
-                task.watch()
-            else:
-                sys.exit('Error: UUID required to suspend a VM.')
-        else:
-            sys.exit('Error: Suspending {} is not supported.'.format(args.object))
+            sys.exit('Error: UUID required to perform action {} on object {}.'.format(args.action, args.object))
+    else:
+        sys.exit('Error: Action {} not supported on object {}.'.format(args.action,args.object))
 
 if __name__ == '__main__':
     client = init_api_client()
