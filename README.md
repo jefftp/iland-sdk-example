@@ -26,6 +26,8 @@ Available Actions:
   - Objects: vm
 - shutdown - Gracefully shutdown the object
   - Objects: vm
+- suspend - Suspend a VM, saving state and powering off.
+  - Objects: vm
 
 ## Requirements
 
