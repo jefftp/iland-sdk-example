@@ -16,11 +16,21 @@ class Client:
 
     def get_entity(self, entity):
         items = []
+        entity_lookup = {
+            'company' : 'COMPANY',
+            'location' : 'IAAS_LOCATION',
+            'org' : 'IAAS_ORGANIZATION',
+            'vdc' : 'IAAS_VDC',
+            'vapp' : 'IAAS_VAPP',
+            'vm' : 'IAAS_VM'
+        }
+
         inventory = self.api.get('/users/{}/inventory'.format(self.username))
-        
+
+        api_entity = entity_lookup[entity]
         for company in inventory['inventory']:
-            for entity in company['entities'][entity]:
-                items.append(entity)
+            for item in company['entities'][api_entity]:
+                items.append(item)
         return items
 
     def get_vm(self, uuid):
@@ -35,11 +45,11 @@ class VirtualMachine:
 
     def do_action(self, action):
         actions = {
-            "power_on": "/vms/{}/actions/poweron",
-            "shutdown": "/vms/{}/actions/shutdown",
-            "power_off": "/vms/{}/actions/poweroff",
-            "reboot": "/vms/{}/actions/reboot",
-            "suspend": "/vms/{}/actions/suspend"}
+            'power_on': '/vms/{}/actions/poweron',
+            'shutdown': '/vms/{}/actions/shutdown',
+            'power_off': '/vms/{}/actions/poweroff',
+            'reboot': '/vms/{}/actions/reboot',
+            'suspend': '/vms/{}/actions/suspend'}
 
         if action in actions:
             task_data = self.client.api.post(actions[action].format(self.uuid))
@@ -78,37 +88,46 @@ class Task:
             time.sleep(5)
 
 def handle_input(client,args):
-    vm_actions = ['power_on', 'shutdown', 'power_off', 'reboot', 'suspend']
+    action_objects = {
+        'list' : ('company', 'location', 'org', 'vdc', 'vapp', 'vm'),
+        'power_on' : ('vm'),
+        'shutdown' : ('vm'),
+        'power_off' : ('vm'),
+        'reboot' : ('vm'),
+        'suspend' : ('vm')
+    }
+
+    if not (args.object in action_objects[args.action]):
+        sys.exit('Error: Action {} not supported on object {}.'.format(args.action,args.object))
 
     if args.action == 'list':
         if args.object == 'company':
-            for company in client.get_entity('COMPANY'):
+            for company in client.get_entity(args.object):
                 print("{}, {}".format(company["name"], company["uuid"]))
         if args.object == 'location':
-            for location in client.get_entity('IAAS_LOCATION'):
+            for location in client.get_entity(args.object):
                 print("{}".format(location["name"]))
         if args.object == 'org':
-            for org in client.get_entity('IAAS_ORGANIZATION'):
+            for org in client.get_entity(args.object):
                 print("{}, {}".format(org["name"], org["uuid"]))
         if args.object == 'vdc':
-            for vdc in client.get_entity('IAAS_VDC'):
+            for vdc in client.get_entity(args.object):
                 print("{}, {}".format(vdc["name"], vdc["uuid"]))
         if args.object == 'vapp':
-            for vapp in client.get_entity('IAAS_VAPP'):
+            for vapp in client.get_entity(args.object):
                 print("{}, {}".format(vapp["name"], vapp["uuid"]))
         if args.object == 'vm':
-            for vm in client.get_entity('IAAS_VM'):
+            for vm in client.get_entity(args.object):
                 print("{}, {}".format(vm["name"], vm["uuid"]))
 
-    elif args.action in vm_actions:
-        if args.object == 'vm' and args.uuid:
+    elif 'vm' in action_objects[args.action]:
+        if args.uuid:
             vm = client.get_vm(args.uuid)
             task = vm.do_action(args.action)
             task.watch()
         else:
             sys.exit('Error: UUID required to perform action {} on object {}.'.format(args.action, args.object))
-    else:
-        sys.exit('Error: Action {} not supported on object {}.'.format(args.action,args.object))
+        
 
 if __name__ == '__main__':
     client = init_api_client()
