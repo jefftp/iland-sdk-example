@@ -26,7 +26,7 @@ class Client:
             'vm' : 'IAAS_VM'
         }
 
-        inventory = self.api.get('/users/{}/inventory'.format(self.username))
+        inventory = self.api.get(f"/users/{self.username}/inventory")
 
         api_entity = entity_lookup[entity]
         for company in inventory['inventory']:
@@ -35,7 +35,7 @@ class Client:
         return items
 
     def get_vm(self, uuid):
-        vm_data = self.api.get('/vms/{}'.format(uuid))
+        vm_data = self.api.get(f"/vms/{uuid}")
         return VirtualMachine(self, vm_data)
 
 class VirtualMachine:
@@ -56,7 +56,7 @@ class VirtualMachine:
             task_data = self.client.api.post(actions[action].format(self.uuid))
             return Task(self.client, task_data)
 
-        sys.exit('Error: Virtual Machines do not support the {} action.').format(action)
+        sys.exit(f"Error: Virtual Machines do not support the {action} action.")
 
 class Task:
     def __init__(self, client, task_data):
@@ -68,7 +68,7 @@ class Task:
         self.operation = task_data['operation']
 
     def refresh(self):
-        task = self.client.api.get('/tasks/{}'.format(self.uuid))
+        task = self.client.api.get(f"/tasks/{self.uuid}")
         self.status = task['status']
         self.active = task['active']
         self.message = task['message']
@@ -80,12 +80,12 @@ class Task:
             self.refresh()
             if self.active == False:
                 if self.status == 'success':
-                    print('{} - {}'.format(self.operation, self.status))
+                    print(f"{self.operation} - {self.status}")
                 else:
-                    print('{} - {} ({})'.format(self.operation, self.status, self.message))                  
+                    print(f"{self.operation} - {self.status} ({self.message})")
                 return
             else:
-                print('{} - {}'.format(self.operation, self.status))
+                print(f"{self.operation} - {self.status}")
             time.sleep(5)
 
 def handle_input(client,args):
@@ -99,27 +99,27 @@ def handle_input(client,args):
     }
 
     if not (args.object in action_objects[args.action]):
-        sys.exit('Error: Action {} not supported on object {}.'.format(args.action,args.object))
+        sys.exit(f"Error: Action {args.action} not supported on object {args.object}.")
 
     if args.action == 'list':
         if args.object == 'company':
             for company in client.get_entity(args.object):
-                print("{}, {}".format(company["name"], company["uuid"]))
+                print(f"{company['name']}, {company['uuid']}")
         if args.object == 'location':
             for location in client.get_entity(args.object):
-                print("{}".format(location["name"]))
+                print(f"{location['name']}")
         if args.object == 'org':
             for org in client.get_entity(args.object):
-                print("{}, {}".format(org["name"], org["uuid"]))
+                print(f"{org['name']}, {org['uuid']}")
         if args.object == 'vdc':
             for vdc in client.get_entity(args.object):
-                print("{}, {}".format(vdc["name"], vdc["uuid"]))
+                print(f"{vdc['name']}, {vdc['uuid']}")
         if args.object == 'vapp':
             for vapp in client.get_entity(args.object):
-                print("{}, {}".format(vapp["name"], vapp["uuid"]))
+                print(f"{vapp['name']}, {vapp['uuid']}")
         if args.object == 'vm':
             for vm in client.get_entity(args.object):
-                print("{}, {}".format(vm["name"], vm["uuid"]))
+                print(f"{vm['name']}, {vm['uuid']}")
 
     elif 'vm' in action_objects[args.action]:
         if args.uuid:
@@ -127,7 +127,7 @@ def handle_input(client,args):
             task = vm.do_action(args.action)
             task.watch()
         else:
-            sys.exit('Error: UUID required to perform action {} on object {}.'.format(args.action, args.object))
+            sys.exit(f"Error: UUID required to perform action {args.action} on object {args.object}.")
         
 
 if __name__ == '__main__':
