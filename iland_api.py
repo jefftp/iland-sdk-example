@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import iland, json, argparse, time, sys
 
 def init_api_client():
