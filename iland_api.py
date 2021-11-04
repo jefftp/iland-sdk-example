@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+#
+# Copyright 2021 iland Internet Solutions Corporation
+#
+# Licensed under the 3-Clause BSD License (the "License"). You may not use
+# this product except in compliance with the License. A copy of the License
+# is located in the file LICENSE.
+#
+
 import iland, json, argparse, time, sys
 
 def init_api_client():
